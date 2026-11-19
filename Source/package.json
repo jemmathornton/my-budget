@@ -1,7 +1,7 @@
 {
   "name": "my-budget",
   "productName": "My Budget",
-  "version": "1.5.11",
+  "version": "1.5.12",
   "description": "A private, offline envelope budget with YNAB4 feature parity.",
   "author": "Jemma",
   "private": true,

@@ -1,18 +1,2 @@
-# Build tools and dependencies
-.tools/
-node_modules/
-
-# Build output
-dist/
-release/
-test-results/
-playwright-report/
-*.tsbuildinfo
-
-# Personal budget data: never commit it
-*.budget
-*.budget.tmp
-*.ynab4/
-
-# The single-file proof of concept (kept locally for reference)
-My Budget.html
+# Your budgets, and everything about them (notes, real-budget tests, backups): never committed.
+Budgets/
