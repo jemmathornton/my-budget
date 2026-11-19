@@ -64,7 +64,7 @@ export function Home() {
         {suggestions.length > 0 && (
           <div className="home-list">
             <h3 className="insp-sec-title" style={{ margin: '0 0 6px' }}>
-              Budgets in Documents\MyBudget
+              Budgets in Documents\MyBudget\Budgets
             </h3>
             {suggestions.map((p) => (
               <div key={p} className="home-item">

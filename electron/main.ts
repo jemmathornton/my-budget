@@ -104,7 +104,7 @@ async function newestDaily(budgetId: string): Promise<string[]> {
 
 // ---- What the window may touch ---------------------------------------------------------------
 // The window can only ask for budget files the user has opened or chosen here (dialogs, the
-// recent list, Documents\MyBudget, Explorer), and YNAB4 folders picked in the dialog. So a bug
+// recent list, Documents\MyBudget\Budgets, Explorer), and YNAB4 folders picked in the dialog. So a bug
 // in the window can never be used to read or write other files.
 
 const approvedBudgets = new Set<string>();
@@ -381,24 +381,35 @@ function registerIpc(): void {
     });
     return r.canceled ? null : approve(r.filePaths[0]);
   });
+  /** Where new budgets are saved by default: Documents\MyBudget\Budgets (made if it isn't there). */
+  const budgetsFolder = async () => {
+    const dir = path.join(app.getPath('documents'), 'MyBudget', 'Budgets');
+    await fs.mkdir(dir, { recursive: true }).catch(() => {});
+    return dir;
+  };
   handle('budget:saveDialog', async (suggestedName: string) => {
     if (canned('save') !== undefined) return approve(canned('save') as string | null);
     const r = await dialog.showSaveDialog(win!, {
       title: 'Save budget as',
       filters: BUDGET_FILTERS,
-      defaultPath: path.join(app.getPath('documents'), 'MyBudget', suggestedName.replace(/[\\/:*?"<>|]/g, '') + '.budget'),
+      defaultPath: path.join(await budgetsFolder(), suggestedName.replace(/[\\/:*?"<>|]/g, '') + '.budget'),
     });
     return r.canceled || !r.filePath ? null : approve(r.filePath);
   });
   handle('budget:findInDocuments', async () => {
-    // Budgets saved in the usual place, offered on the start screen.
-    const dir = path.join(app.getPath('documents'), 'MyBudget');
-    try {
-      const names = await fs.readdir(dir);
-      return names.filter((n) => /\.budget$/i.test(n)).map((n) => approve(path.join(dir, n)));
-    } catch {
-      return [];
+    // Budgets saved in the usual place, offered on the start screen: Documents\MyBudget\Budgets,
+    // and Documents\MyBudget itself, where they were kept before 1.5.12.
+    const root = path.join(app.getPath('documents'), 'MyBudget');
+    const found: string[] = [];
+    for (const dir of [path.join(root, 'Budgets'), root]) {
+      try {
+        const names = await fs.readdir(dir);
+        for (const n of names) if (/\.budget$/i.test(n)) found.push(approve(path.join(dir, n)));
+      } catch {
+        // Not there: nothing to offer from it.
+      }
     }
+    return found;
   });
   handle('budget:read', (file: string) => readBudgetFile(checkBudget(file)));
   // A file that wasn't chosen here is treated as missing (e.g. a remembered path from long ago).

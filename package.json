@@ -18,7 +18,7 @@
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "icon": "node scripts/make-icon.mjs",
     "format": "prettier --write src electron tests scripts",
-    "test:private": "node scripts/test-private.mjs"
+    "test:real": "node scripts/test-real.mjs"
   },
   "devDependencies": {
     "@playwright/test": "1.64.0",

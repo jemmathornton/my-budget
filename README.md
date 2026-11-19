@@ -23,9 +23,19 @@ Built with Electron, React and TypeScript.
 
 Budgets are plain `.budget` files (JSON) wherever you keep them.
 
+## The folder
+
+```
+MyBudget/
+  Source/     the app (this repository holds only this, and the README)
+  Budgets/    your budgets, and anything about them: never committed (see .gitignore)
+```
+
+The app offers the budgets in `Documents\MyBudget\Budgets` on its start screen, and saves new ones there.
+
 ## Building it
 
-Needs Node.js 22.
+Needs Node.js 22. In `Source`:
 
 ```
 npm install
@@ -36,12 +46,14 @@ node node_modules/electron-builder/cli.js --win --publish never   # the Windows 
 
 ## Tests
 
+In `Source`:
+
 ```
 npm run typecheck
 npm test             # unit tests (vitest)
 npm run test:e2e     # the app itself, driven by Playwright (the window opens off-screen)
+npm run test:real    # tests that read your own budgets, kept in Budgets/Tests
 ```
 
-Tests that use your own budgets don't belong in this repository. Keep them in a folder of your own
-(`../MyBudget-private/tests`, or set `MYBUDGET_PRIVATE_TESTS`) and run them with
-`npm run test:private`. They import the app as `@app/…` and the test helpers as `@fixtures`.
+Tests that use your own budgets belong with them in `Budgets/Tests` (or set `MYBUDGET_REAL_TESTS`),
+not in the repository. They import the app as `@app/…` and the test helpers as `@fixtures`.
