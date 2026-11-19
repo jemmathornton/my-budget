@@ -1,0 +1,104 @@
+{
+  "name": "my-budget",
+  "productName": "My Budget",
+  "version": "1.5.11",
+  "description": "A private, offline envelope budget with YNAB4 feature parity.",
+  "author": "Jemma",
+  "private": true,
+  "type": "module",
+  "main": "dist/electron/main.cjs",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "node scripts/build.mjs",
+    "dist": "node scripts/build.mjs && electron-builder --win --publish never",
+    "start": "electron .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "node scripts/build.mjs && playwright test",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "icon": "node scripts/make-icon.mjs",
+    "format": "prettier --write src electron tests scripts",
+    "test:private": "node scripts/test-private.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.64.0",
+    "@tanstack/react-virtual": "3.14.18",
+    "@types/node": "26.6.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "electron": "44.9.3",
+    "electron-builder": "26.15.3",
+    "esbuild": "0.28.2",
+    "immer": "11.1.21",
+    "prettier": "3.9.10",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.4",
+    "vitest": "5.0.4"
+  },
+  "prettier": {
+    "printWidth": 120,
+    "singleQuote": true
+  },
+  "build": {
+    "appId": "com.jemma.mybudget",
+    "productName": "My Budget",
+    "copyright": "Jemma",
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "!dist/**/*.map",
+      "build/icon.png",
+      "package.json"
+    ],
+    "asar": true,
+    "electronDist": "node_modules/electron/dist",
+    "electronLanguages": [
+      "en-GB",
+      "en-US"
+    ],
+    "electronFuses": {
+      "runAsNode": false,
+      "enableNodeOptionsEnvironmentVariable": false,
+      "enableNodeCliInspectArguments": false,
+      "enableEmbeddedAsarIntegrityValidation": true,
+      "onlyLoadAppFromAsar": true
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "My Budget",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false,
+      "artifactName": "My Budget Setup ${version}.${ext}"
+    },
+    "fileAssociations": [
+      {
+        "ext": "budget",
+        "name": "My Budget file",
+        "description": "My Budget budget",
+        "icon": "build/icon.ico",
+        "role": "Editor"
+      }
+    ]
+  }
+}

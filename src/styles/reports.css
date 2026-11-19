@@ -1,0 +1,827 @@
+/* Reports screen. Chart colours are a validated categorical palette (8 slots, checked for
+   colour-blind separation against the card surface in each theme); the dark theme uses its
+   own steps of the same hues, not an automatic flip. Text never uses the series colours. */
+
+:root {
+  --rp-c1: #2a78d6;
+  --rp-c2: #eb6834;
+  --rp-c3: #1baf7a;
+  --rp-c4: #eda100;
+  --rp-c5: #e87ba4;
+  --rp-c6: #008300;
+  --rp-c7: #4a3aa7;
+  --rp-c8: #e34948;
+  --rp-other: #a3abb3;
+  --rp-grid: #eceef1;
+  --rp-axis: #b9c0c7;
+  --rp-band: rgba(74, 127, 181, 0.08);
+  --rp-up: #447a17;
+}
+:root[data-theme='dark'] {
+  --rp-c1: #3987e5;
+  --rp-c2: #d95926;
+  --rp-c3: #199e70;
+  --rp-c4: #c98500;
+  --rp-c5: #d55181;
+  --rp-c6: #008300;
+  --rp-c7: #9085e9;
+  --rp-c8: #e66767;
+  --rp-other: #5d666f;
+  --rp-grid: #2a3036;
+  --rp-axis: #4b535b;
+  --rp-band: rgba(255, 255, 255, 0.05);
+  --rp-up: #8cc63f;
+}
+
+/* ---- Frame ---- */
+.rp {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--page);
+}
+.rp-head {
+  display: flex;
+  align-items: flex-end;
+  gap: 22px;
+  padding: 10px 20px 0;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+.rp-head h1 {
+  font-size: 19px;
+  font-weight: 600;
+  margin: 0 0 6px;
+}
+.rp-head .tabs {
+  border-bottom: none;
+  margin: 0;
+}
+.rp-filters {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 7px 20px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+.rp-filter-btn {
+  gap: 7px;
+  padding: 3px 9px;
+}
+.rp-filter-btn .rp-fb-main {
+  font-weight: 600;
+}
+.rp-filter-btn .rp-fb-sub {
+  color: var(--muted);
+}
+.rp-filter-btn svg {
+  flex: none;
+}
+.rp-custom {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.rp-month-select {
+  display: inline-flex;
+  gap: 3px;
+}
+.rp-month-select select {
+  padding: 2px 4px;
+  font-size: 12.5px;
+}
+.rp-hidden-check {
+  margin-left: 6px;
+  font-size: 12.5px;
+}
+.rp-hidden-check.disabled {
+  color: var(--faint);
+  cursor: default;
+}
+.rp-body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 14px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.rp-body > * {
+  flex: none;
+}
+.rp-card {
+  margin: 0;
+  padding: 12px 16px 14px;
+  min-width: 0;
+}
+.rp-card .empty {
+  padding: 48px 20px;
+}
+.rp-card-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+  min-height: 26px;
+}
+.rp-card-head h2 {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  flex: 1;
+}
+.rp-card-head-top {
+  align-items: flex-start;
+}
+.rp-head-stats {
+  margin-left: auto;
+  display: flex;
+  gap: 18px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.rp-head-stats .money {
+  color: var(--text);
+  font-weight: 600;
+  margin-left: 4px;
+}
+.rp-head-stats .money.neg {
+  color: var(--neg-text);
+}
+.rp-head-stats .money.pos {
+  color: var(--green-d);
+}
+.rp-card-head > .seg {
+  margin-left: auto;
+  flex: none;
+}
+.rp-foot-note {
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.rp-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 5px;
+  border-radius: 3px;
+  background: var(--line2);
+  color: var(--muted);
+  font-size: 10.5px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 15px;
+  vertical-align: 1px;
+}
+.rp-hidden-cat .rp-name,
+.rp-hidden-cat .rp-sl {
+  font-style: italic;
+}
+.rp-num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* A card that shrinks to fit the screen, scrolling inside. */
+.rp-body > .rp-fill {
+  flex: 0 1 auto;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+}
+.rp-scroll {
+  overflow: auto;
+  min-height: 0;
+  flex: 1;
+}
+/* A card that takes the rest of the screen height (charts fill it). */
+.rp-body > .rp-grow {
+  flex: 1 1 0;
+  min-height: 380px;
+  display: flex;
+  flex-direction: column;
+}
+.rp-chart.fill {
+  flex: 1 1 0;
+  min-height: 240px;
+}
+.rp-chart.fill > .rp-svg {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+/* ---- Filter popovers ---- */
+.rp-presets {
+  padding: 4px 0;
+  min-width: 290px;
+}
+.rp-preset {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 5px 14px 5px 10px;
+  text-align: left;
+  font-size: 12.5px;
+}
+.rp-preset:hover {
+  background: var(--row-hover);
+}
+.rp-preset.on {
+  font-weight: 600;
+}
+.rp-preset.custom {
+  border-top: 1px solid var(--line2);
+  margin-top: 4px;
+  padding-top: 7px;
+}
+.rp-preset-check {
+  width: 16px;
+  display: inline-flex;
+  color: var(--accent);
+}
+.rp-preset-label {
+  flex: 1;
+}
+.rp-preset-span {
+  color: var(--muted);
+  font-weight: 400;
+  font-size: 12px;
+}
+.rp-acc-pop {
+  padding: 8px 10px 10px;
+  max-height: 70vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+.rp-acc-group + .rp-acc-group {
+  margin-top: 8px;
+}
+.rp-acc-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 2px 0 4px;
+  border-bottom: 1px solid var(--line2);
+  margin-bottom: 3px;
+  white-space: nowrap;
+}
+.rp-acc-head .link {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+.rp-acc-hint {
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 400;
+  color: var(--faint);
+}
+.rp-acc-row {
+  display: flex;
+  padding: 3px 2px;
+  font-size: 12.5px;
+}
+/* The Payees filter's search box (1.5). */
+.rp-find {
+  width: 100%;
+  margin: 2px 0 6px;
+}
+.rp-acc-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rp-acc-foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line2);
+}
+
+/* ---- Charts ---- */
+.rp-chart {
+  position: relative;
+  width: 100%;
+}
+.rp-svg {
+  display: block;
+  overflow: visible;
+  outline: none;
+}
+.rp-svg:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.rp-svg text {
+  font-size: 11px;
+  fill: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.rp-svg .rp-tick-sub {
+  fill: var(--faint);
+  font-size: 10.5px;
+}
+/* For a moment while printing (1.5.2): the chart at the page's width, about 80 mm high. */
+.print-sizing .rp-body .rp-chart {
+  width: var(--print-chart-w) !important;
+  height: 300px !important;
+  flex: none !important;
+}
+.rp-grid {
+  stroke: var(--rp-grid);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.rp-base {
+  stroke: var(--rp-axis);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+.rp-band {
+  fill: var(--rp-band);
+}
+.rp-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.rp-dot {
+  stroke: var(--bg);
+  stroke-width: 2;
+}
+.rp-tip {
+  position: absolute;
+  top: 4px;
+  z-index: 5;
+  pointer-events: none;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+  padding: 7px 10px 8px;
+  font-size: 12px;
+  min-width: 170px;
+  max-width: 320px;
+}
+.rp-tip-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.rp-tip-row {
+  display: grid;
+  grid-template-columns: 12px auto 1fr;
+  align-items: center;
+  column-gap: 8px;
+  line-height: 18px;
+}
+.rp-tip-key {
+  width: 12px;
+  height: 3px;
+  border-radius: 2px;
+}
+.rp-tip-val {
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.rp-tip-lbl {
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rp-tip-row.strong {
+  border-top: 1px solid var(--line2);
+  margin-top: 3px;
+  padding-top: 2px;
+}
+.rp-tip-row.strong .rp-tip-lbl {
+  color: var(--text);
+}
+
+/* Legend */
+.rp-legend-wrap {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  flex: 1;
+  min-width: 0;
+}
+.rp-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  align-items: center;
+}
+.rp-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  background: none;
+  border: none;
+  padding: 2px 0;
+  color: var(--text);
+}
+.rp-legend-item.toggle {
+  padding: 2px 6px;
+  margin: 0 -6px;
+  border-radius: 4px;
+}
+.rp-legend-item.toggle:hover {
+  background: var(--row-hover);
+}
+.rp-legend-item.off .rp-legend-label,
+.rp-legend-item.off .rp-legend-value {
+  color: var(--faint);
+  text-decoration: line-through;
+}
+.rp-legend-value {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.rp-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  border: 1.5px solid transparent;
+  flex: none;
+  vertical-align: -1px;
+}
+.rp-swatch.line {
+  height: 3px;
+  width: 14px;
+  border: none;
+  border-radius: 2px;
+}
+
+/* ---- Spending ---- */
+.rp-body > .rp-spending {
+  flex: 0 1 auto;
+  min-height: 380px;
+  display: flex;
+  flex-direction: column;
+}
+.rp-crumbs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--muted);
+  flex: 1;
+  min-width: 0;
+}
+.rp-crumbs .link {
+  font-size: 14px;
+  padding: 0;
+}
+.rp-crumb-here {
+  color: var(--text);
+  font-weight: 600;
+}
+.rp-spend-body {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 32px;
+  align-items: start;
+}
+.rp-spend-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding-top: 6px;
+}
+.rp-spend-note {
+  font-size: 12px;
+  color: var(--muted);
+}
+.rp-spend-table {
+  overflow: auto;
+  max-height: 100%;
+  min-height: 0;
+  align-self: stretch;
+}
+.rp-donut {
+  position: relative;
+  flex: none;
+}
+.rp-donut svg {
+  display: block;
+  overflow: visible;
+}
+.rp-seg {
+  cursor: pointer;
+  transition: opacity 0.12s;
+}
+.rp-seg.gap {
+  stroke: var(--bg);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+.rp-seg.dim {
+  opacity: 0.4;
+}
+.rp-seg.other {
+  cursor: default;
+}
+.rp-donut-centre {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+}
+.rp-dc-label {
+  font-size: 12px;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rp-dc-value {
+  font-size: 19px;
+  font-weight: 600;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.rp-dc-sub {
+  font-size: 11.5px;
+  color: var(--muted);
+}
+.rp-table td {
+  padding: 4px 8px;
+  font-size: 12.5px;
+}
+.rp-table .rp-sw-col {
+  width: 18px;
+  padding-right: 0;
+}
+.rp-table .rp-act-col {
+  width: 30px;
+  padding: 0 4px;
+  text-align: center;
+}
+.rp-table .rp-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 0;
+  width: 60%;
+}
+.rp-table tbody tr.rp-hot td {
+  background: var(--row-hover);
+}
+.rp-table tbody tr.clickable:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.rp-row-btn,
+.rp-row-go {
+  opacity: 0;
+  color: var(--muted);
+  display: inline-flex;
+}
+.rp-table tr:hover .rp-row-btn,
+.rp-table tr:hover .rp-row-go,
+.rp-table tr:focus-within .rp-row-btn,
+.rp-table tr.rp-hot .rp-row-go {
+  opacity: 1;
+}
+.rp-table tfoot td {
+  position: sticky;
+  bottom: 0;
+  background: var(--bg);
+}
+
+/* ---- Wide month tables (Income v Expense, Spending Trends) ---- */
+.rp-grid-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  min-width: 100%;
+  font-size: 12.5px;
+}
+.rp-grid-table th,
+.rp-grid-table td {
+  padding: 4px 9px;
+  border-bottom: 1px solid var(--line2);
+  white-space: nowrap;
+  background: var(--bg);
+}
+.rp-grid-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--line);
+  text-align: left;
+}
+.rp-grid-table thead th.r {
+  text-align: right;
+}
+.rp-grid-table .rp-sl {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 210px;
+  border-right: 1px solid var(--line);
+}
+.rp-grid-table .rp-sr1,
+.rp-grid-table .rp-sr2 {
+  position: sticky;
+  z-index: 1;
+  width: 104px;
+  min-width: 104px;
+}
+.rp-grid-table .rp-sr1 {
+  right: 0;
+}
+.rp-grid-table .rp-sr2 {
+  right: 104px;
+  border-left: 1px solid var(--line);
+}
+.rp-grid-table thead .rp-sl,
+.rp-grid-table thead .rp-sr1,
+.rp-grid-table thead .rp-sr2 {
+  z-index: 3;
+}
+.rp-grid-table td.rp-indent {
+  padding-left: 30px;
+}
+.rp-sl-in {
+  display: flex;
+  align-items: center;
+  max-width: 250px;
+  min-width: 0;
+}
+.rp-indent .rp-sl-in {
+  max-width: 230px;
+}
+.rp-wide-names .rp-sl-in {
+  max-width: 500px;
+}
+.rp-wide-names .rp-indent .rp-sl-in {
+  max-width: 480px;
+}
+.rp-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+/* Many months: fixed column widths so out-of-view months can be replaced by spacer cells. */
+.rp-grid-table.rp-fixed {
+  table-layout: fixed;
+}
+.rp-grid-table.rp-fixed td,
+.rp-grid-table.rp-fixed th {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rp-grid-table .rp-gap {
+  padding: 0;
+}
+/* Virtualised rows must all be the same height. */
+.rp-grid-table tbody tr.rp-v > td {
+  height: 27px;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.rp-grid-table tr.rp-spacer > td {
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+.rp-grid-table .rp-section td {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: bottom;
+  padding-bottom: 3px;
+}
+.rp-grid-table .rp-section .rp-master-btn {
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 10.5px;
+}
+.rp-grid-table .rp-master td {
+  background: var(--panel);
+  font-weight: 600;
+  color: var(--master-text);
+}
+.rp-grid-table .rp-total td {
+  font-weight: 600;
+  border-top: 1px solid var(--line);
+}
+.rp-grid-table .rp-net td {
+  font-weight: 700;
+  background: var(--panel);
+  border-top: 2px solid var(--line);
+  border-bottom: none;
+  font-size: 13px;
+}
+.rp-grid-table .rp-item td.rp-sl .rp-swatch {
+  margin-right: 8px;
+}
+.rp-grid-table td.rp-click {
+  cursor: pointer;
+}
+.rp-grid-table td.rp-click:hover {
+  background: var(--accent-l);
+}
+.rp-grid-table td.rp-click:hover .money {
+  text-decoration: underline;
+}
+.rp-master-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-weight: 600;
+  color: inherit;
+}
+.rp-master-btn svg {
+  color: var(--muted);
+}
+.rp-ive .rp-scroll {
+  border-top: 1px solid var(--line2);
+}
+
+/* ---- Net Worth tiles ---- */
+.rp-tiles {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.rp-tile {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 10px 14px 11px;
+  min-width: 0;
+}
+.rp-tile-label {
+  font-size: 12px;
+  color: var(--muted);
+}
+.rp-tile-value {
+  font-size: 21px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rp-tile-value.neg,
+.rp-tile-value.down {
+  color: var(--neg-text);
+}
+.rp-tile-value.up {
+  color: var(--rp-up);
+}
+.rp-tile-value span {
+  font-size: 13px;
+  vertical-align: 2px;
+}
+.rp-tile-sub {
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
